@@ -1,0 +1,55 @@
+%%%loadiding data
+
+XTRain %%% NxRxH N no of RxH images
+YTrain %%% Nx1 classes corresponding N datas in XTrain
+
+XTest %% MxRxH M no of RxH images
+YTest %% Mx1 i.e classes corresponds to M data in XTest
+
+
+%%%%% define CNN layers %%%%%
+
+layers=[imageInputLayer([100,100,1],'Name','data','DataAugmentation','none', 'Normalization','zerocenter'),% defined input layer
+    convolution2dlayer([11,11],30,'Name','conv1','NumChannels',1,'Stride',[1 1],'Padding',0),%defined 1st convolutional layer
+    reluLayer('Name','relu1'),% activation function is ReLU
+    crossChannelNormalizationLayer(5,'K',1),% Normalizes to 0 and 1
+    maxPooling2DLayer(3,'Name','pool1','Stride',[2,2],'Padding',[0,0,0,0],'HasUnpoolingOutputs',false),% defines maxpooling layer to reduce dimensions
+    
+    
+    convolution2dlayer([5,5],20,'Name','conv2','NumChannels',30,'Stride',[1 1],'Padding',0),%defined 2nd convolutional layer
+    reluLayer('Name','relu2'),% activation function is ReLU
+    crossChannelNormalizationLayer(5,'K',1),% Normalizes to 0 and 1
+    maxPooling2DLayer(3,'Name','pool2','Stride',[2,2],'Padding',[0,0,0,0],'HasUnpoolingOutputs',false),% defines maxpooling layer to reduce dimensions
+    
+    convolution2dlayer([3,3],20,'Name','conv2','NumChannels',20,'Stride',[1 1],'Padding',0),%defined 2nd convolutional layer
+    reluLayer('Name','relu3'),% activation function is ReLU
+    
+    fullyConnectedLayer(4096,'Name','fc1','WeightLearningFactor',1,'WeightL2Factor',1,'BiasLearnFactor',2,'BiasL2Factor',0),
+    reluLayer('Name','relu4'),
+    dropoutLayer('Name','drop6','Probability','0.5000'),
+    
+      fullyConnectedLayer(4096,'Name','fc1','WeightLearningFactor',1,'WeightL2Factor',1,'BiasLearnFactor',2,'BiasL2Factor',0),
+    reluLayer('Name','relu4'),
+    dropoutLayer('Name','drop6','Probability','0.5000'),
+    softmaxLayer('Name','prob'),
+    classificationLayer('Name','output')];
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%training options%%%%%
+options=trainingOption('sgmd',....,
+    'LearnRateSchedule','piecewise',....
+    'LearnRateDropfactor',0.2,....
+    'MaxEchos',20,...
+    'MiniBatchsize',64,...
+    'Plots','training-progress',....
+    );
+
+
+%%%%%%%%%%%%%%%%%training starts%%%%
+netWork=train(XTrain,YTrain,options);
+
+
+%%%%%%%%%%%%%%classifications
+YPredict=classify(netWork,XTest);
+
+accuracy=((YPredict==YTest)==1)/numel(YTest)%%%%% computes accuracy
